@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "145084534457",
+    "project_id": "mediapipe-llm-inference",
+    "storage_bucket": "mediapipe-llm-inference.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:145084534457:android:8e43c76d6024759c345568",
+        "android_client_info": {
+          "package_name": "com.google.mediapipe.examples.llminference"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "145084534457-0mj84gjivk1u2k5es1gd5ul25fuf799e.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.google.mediapipe.examples.llminference",
+            "certificate_hash": "43dfd142a448515ea58f65bd8e0d98b2a572750ad24ddbfa8c83a10a747f915d"
+          }
+        },
+        {
+          "client_id": "145084534457-0mj84gjivk1u2k5es1gd5ul25fuf799e.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCH72047rQN_CccEMK-RD46Ed6jx4rf84c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "145084534457-0mj84gjivk1u2k5es1gd5ul25fuf799e.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+} 
