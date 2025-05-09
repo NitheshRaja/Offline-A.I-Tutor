@@ -126,7 +126,7 @@ fun ChatScreen(
             onChangedMessage(recognizedText)
         }
     }
-
+    
     // Find the nearest activity context
     val activityContext = LocalContext.current
     val activity = when (activityContext) {
@@ -163,7 +163,7 @@ fun ChatScreen(
                     if (message.isFromUser) "User" else "AI",
                     message.message
                 )
-            }
+        }
             Log.d("ChatScreen", "Saved conversation to cloud")
         } catch (e: Exception) {
             Log.e("ChatScreen", "Error saving chat to cloud", e)
@@ -226,7 +226,7 @@ fun ChatScreen(
                     }
                 ) {
                     Text("Local")
-                }
+        }
             }
         )
     }

@@ -8,13 +8,27 @@ import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.util.Log
 import java.util.Locale
+import android.content.pm.PackageManager
+import android.widget.Toast
 
 class SpeechRecognitionService(private val context: Context) {
     private val TAG = "SpeechRecognitionService"
     private val speechRecognizer = SpeechRecognizer.createSpeechRecognizer(context)
     private var isListening = false
     
+    fun isSpeechRecognitionAvailable(): Boolean {
+        val pm = context.packageManager
+        val activities = pm.queryIntentActivities(
+            Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH), 0
+        )
+        return activities.isNotEmpty()
+    }
+
     fun startListening(onResult: (String) -> Unit) {
+        if (!isSpeechRecognitionAvailable()) {
+            Toast.makeText(context, "Speech recognition not available on this device", Toast.LENGTH_LONG).show()
+            return
+        }
         Log.d(TAG, "Starting speech recognition service")
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)

@@ -16,6 +16,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.File
 import java.io.FileOutputStream
+import androidx.compose.foundation.background
 
 private class MissingAccessTokenException :
     Exception("Please try again after sign in")
@@ -172,35 +173,54 @@ private suspend fun deleteDownloadedFile(context: Context) {
 
 @Composable
 fun DownloadIndicator(progress: Int, onCancel: () -> Unit) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surface)
     ) {
-        Text(
-            text = "Downloading Model: $progress%",
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
-        CircularProgressIndicator(progress = { progress / 100f })
-        Button(onClick = onCancel, modifier = Modifier.padding(top = 8.dp)) {
-            Text("Cancel")
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.align(Alignment.Center)
+        ) {
+            Text(
+                text = "Downloading Model: $progress%",
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            CircularProgressIndicator(progress = { progress / 100f }, modifier = Modifier.size(48.dp))
+            Spacer(modifier = Modifier.height(24.dp))
+            Button(onClick = onCancel, modifier = Modifier) {
+                Text("Cancel")
+            }
         }
     }
 }
 
 @Composable
 fun LoadingIndicator() {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surface)
     ) {
-        Text(
-            text = stringResource(R.string.loading_model),
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier
-                .padding(bottom = 8.dp)
-        )
-        CircularProgressIndicator()
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.align(Alignment.Center)
+        ) {
+            Text(
+                text = stringResource(R.string.loading_model),
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            Text(
+                text = "Please wait while the model is being loaded...",
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(bottom = 24.dp)
+            )
+            CircularProgressIndicator(modifier = Modifier.size(48.dp))
+        }
     }
 }
 

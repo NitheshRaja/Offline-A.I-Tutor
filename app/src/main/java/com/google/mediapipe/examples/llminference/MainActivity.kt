@@ -48,6 +48,8 @@ import androidx.lifecycle.ViewModelProvider
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
 import androidx.compose.animation.*
+import androidx.compose.foundation.isSystemInDarkTheme
+import android.os.Build
 
 // Ensure necessary Route composables are imported (adjust paths if needed)
 import com.google.mediapipe.examples.llminference.ChatRoute
@@ -68,23 +70,22 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Apply theme preference
-        ThemePreferenceManager.applyTheme(ThemePreferenceManager.loadThemePreference(this))
-
         setContent {
             val context = LocalContext.current
-            val isDarkThemeState by remember {
-                mutableStateOf(ThemePreferenceManager.isCurrentlyDark(context))
+            var themePref by remember { mutableStateOf(ThemePreferenceManager.loadThemePreference(context)) }
+            val isDarkTheme = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+                true // Always dark on Android < 12
+            } else {
+                when (themePref) {
+                    ThemePreferenceManager.THEME_DARK -> true
+                    ThemePreferenceManager.THEME_LIGHT -> false
+                    else -> isSystemInDarkTheme()
+                }
             }
-            LaunchedEffect(ThemePreferenceManager.loadThemePreference(context)) {
-                // React if needed
-            }
-
-            LLMInferenceTheme(darkTheme = isDarkThemeState) {
-                val navController = rememberNavController() // Defined here
-                val startDestination = intent.getStringExtra("NAVIGATE_TO") ?: START_SCREEN // Defined here
+            LLMInferenceTheme(darkTheme = isDarkTheme) {
+                val navController = rememberNavController()
+                val startDestination = intent.getStringExtra("NAVIGATE_TO") ?: START_SCREEN
                 var currentScreen by remember { mutableStateOf(startDestination) }
-
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 LaunchedEffect(navBackStackEntry) {
                     currentScreen = navBackStackEntry?.destination?.route ?: startDestination
@@ -203,6 +204,18 @@ class MainActivity : ComponentActivity() {
                             composable(CHAT_HISTORY) {
                                 ChatHistoryScreen(
                                     onBackClick = { navController.popBackStack() }
+                                )
+                            }
+                            // HomeScreen with theme toggle
+                            composable("home") {
+                                HomeScreen(
+                                    isDarkTheme = isDarkTheme,
+                                    onThemeChange = { dark ->
+                                        val newPref = if (dark) ThemePreferenceManager.THEME_DARK else ThemePreferenceManager.THEME_LIGHT
+                                        ThemePreferenceManager.saveThemePreference(context, newPref)
+                                        themePref = newPref
+                                    },
+                                    onLogout = { /* ... */ }
                                 )
                             }
                         }
