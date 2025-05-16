@@ -3,6 +3,7 @@ package com.google.mediapipe.examples.llminference
 import android.Manifest
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -60,20 +61,71 @@ import kotlinx.coroutines.flow.StateFlow
 import java.text.SimpleDateFormat
 import java.util.*
 import android.util.Log
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.focus.FocusRequester
 
 @Composable
 internal fun ChatRoute(
-    onClose: () -> Unit
+    onClose: () -> Unit,
+    selectedScenario: RoleplayScenario? = null
 ) {
     val context = LocalContext.current.applicationContext
     val chatViewModel: ChatViewModel = viewModel(factory = ChatViewModel.getFactory(context))
+    val currentContext = LocalContext.current
 
-    // Reset InferenceModel and clear chat when entering ChatScreen
+    // Set up back press handling
+    val handleBackPress = {
+        // Clear chat and inference model
+        chatViewModel.clearChat()
+
+        // Navigate directly to HomeActivity
+        val intent = Intent(currentContext, HomeActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+        currentContext.startActivity(intent)
+
+        // If context is an Activity, finish it
+        if (currentContext is Activity) {
+            currentContext.finish()
+        }
+
+        // Also call onClose to ensure proper cleanup
+        onClose()
+    }
+
+    // Register back handler
+    BackHandler(onBack = handleBackPress)
+
+    // Always reset and clear chat when entering
     LaunchedEffect(Unit) {
         val inferenceModel = InferenceModel.getInstance(context)
         chatViewModel.resetInferenceModel(inferenceModel)
         chatViewModel.clearChat()
     }
+
+    // Check if the selected scenario is Interviewer
+    if (selectedScenario == RoleplayScenario.INTERVIEWER) {
+        InterviewerChat(
+            onClose = handleBackPress,
+            chatViewModel = chatViewModel
+        )
+        return  // Return early to prevent showing regular ChatScreen
+    }
+    if (selectedScenario == RoleplayScenario.CUSTOMER_CARE) {
+        CustomerCareChat(
+            onClose = handleBackPress,
+            chatViewModel = chatViewModel
+        )
+        return  // Return early to prevent showing regular ChatScreen
+    }
+    if (selectedScenario == RoleplayScenario.PROFESSIONAL_MEETING) {
+        ProfessionalMeetingChat(
+            onClose = handleBackPress,
+            chatViewModel = chatViewModel
+        )
+        return  // Return early to prevent showing regular ChatScreen
+    }
+
 
     val uiState by chatViewModel.uiState.collectAsStateWithLifecycle()
     val textInputEnabled by chatViewModel.isTextInputEnabled.collectAsStateWithLifecycle()
@@ -105,6 +157,7 @@ fun ChatScreen(
     onSendMessage: (String) -> Unit,
     onChangedMessage: (String) -> Unit,
     onClose: () -> Unit
+
 ) {
     var userMessage by rememberSaveable { mutableStateOf("") }
     val tokens by remainingTokens.collectAsState(initial = -1)
@@ -113,12 +166,12 @@ fun ChatScreen(
     val recognizedText by chatViewModel.recognizedText.collectAsState()
     val showPermissionRequest by chatViewModel.showPermissionRequest.collectAsState()
     val isGeneratingResponse = uiState.messages.any { it.isLoading }
-    
+
     // Add states for dialogs
     var showExitConfirmation by remember { mutableStateOf(false) }
     var showSaveOptions by remember { mutableStateOf(false) }
     val textFileStorage = remember { TextFileStorage(context) }
-    
+
     // Update userMessage when recognizedText changes
     LaunchedEffect(recognizedText) {
         if (recognizedText.isNotEmpty()) {
@@ -126,7 +179,7 @@ fun ChatScreen(
             onChangedMessage(recognizedText)
         }
     }
-    
+
     // Find the nearest activity context
     val activityContext = LocalContext.current
     val activity = when (activityContext) {
@@ -163,7 +216,7 @@ fun ChatScreen(
                     if (message.isFromUser) "User" else "AI",
                     message.message
                 )
-        }
+            }
             Log.d("ChatScreen", "Saved conversation to cloud")
         } catch (e: Exception) {
             Log.e("ChatScreen", "Error saving chat to cloud", e)
@@ -226,7 +279,7 @@ fun ChatScreen(
                     }
                 ) {
                     Text("Local")
-        }
+                }
             }
         )
     }
@@ -253,13 +306,6 @@ fun ChatScreen(
                 style = MaterialTheme.typography.titleSmall
             )
             Row {
-                if (isGeneratingResponse) {
-                    IconButton(
-                        onClick = { chatViewModel.stopInference() }
-                    ) {
-                        Icon(Icons.Default.Close, contentDescription = "Stop Response")
-                    }
-                }
                 IconButton(
                     onClick = {
                         InferenceModel.getInstance(context).resetSession()
@@ -398,7 +444,7 @@ fun ChatItem(
     // Get a reference to the chat view model to control TTS
     val chatViewModel = viewModel<ChatViewModel>(factory = ChatViewModel.getFactory(LocalContext.current))
     val isSpeaking by chatViewModel.isSpeaking.collectAsState()
-    
+
     // This tracks if this specific message is being spoken
     var isThisMessageSpeaking by remember { mutableStateOf(false) }
 
@@ -440,13 +486,13 @@ fun ChatItem(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                        Text(
-                            text = chatMessage.message,
+                            Text(
+                                text = chatMessage.message,
                                 modifier = Modifier
                                     .padding(16.dp)
                                     .weight(1f)
                             )
-                            
+
                             // Only show TTS button for AI messages
                             if (!chatMessage.isFromUser && !chatMessage.isThinking && !chatMessage.isLoading) {
                                 IconButton(

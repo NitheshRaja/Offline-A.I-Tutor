@@ -17,7 +17,7 @@ import kotlinx.coroutines.launch
 import kotlin.math.max
 
 class ChatViewModel(
-    private var inferenceModel: InferenceModel,
+    var inferenceModel: InferenceModel,
     private val speechRecognitionService: SpeechRecognitionService,
     private val textFileStorage: TextFileStorage,
     private val permissionHandler: PermissionHandler,
@@ -99,27 +99,32 @@ class ChatViewModel(
         _isSpeaking.value = false
     }
 
-    fun sendMessage(userMessage: String) {
+    fun sendMessage(message: String, skipUi: Boolean = false) {
         viewModelScope.launch(Dispatchers.IO) {
-            _uiState.value.addMessage(userMessage, USER_PREFIX)
+            if (!skipUi) {
+                _uiState.value.addMessage(message, USER_PREFIX)
+            }
+
             _uiState.value.createLoadingMessage()
             setInputEnabled(false)
+
             try {
                 currentInferenceJob = viewModelScope.launch(Dispatchers.IO) {
-                val asyncInference = inferenceModel.generateResponseAsync(userMessage, { partialResult, done ->
-                    _uiState.value.appendMessage(partialResult, done)
-                    if (done) {
-                        setInputEnabled(true)
+                    val asyncInference = inferenceModel.generateResponseAsync(message) { partialResult, done ->
+                        _uiState.value.appendMessage(partialResult, done)
+                        if (done) {
+                            setInputEnabled(true)
                             currentInferenceJob = null
-                    } else {
-                        _tokensRemaining.update { max(0, it - 1) }
+                        } else {
+                            _tokensRemaining.update { max(0, it - 1) }
+                        }
                     }
-                })
-                asyncInference.addListener({
-                    viewModelScope.launch(Dispatchers.IO) {
-                        recomputeSizeInTokens(userMessage)
-                    }
-                }, Dispatchers.Main.asExecutor())
+
+                    asyncInference.addListener({
+                        viewModelScope.launch(Dispatchers.IO) {
+                            recomputeSizeInTokens(message)
+                        }
+                    }, Dispatchers.Main.asExecutor())
                 }
             } catch (e: Exception) {
                 val errorMessage = e.localizedMessage ?: "Unknown Error"
@@ -130,14 +135,52 @@ class ChatViewModel(
         }
     }
 
+
     fun stopInference() {
         currentInferenceJob?.cancel()
         currentInferenceJob = null
         setInputEnabled(true)
         _uiState.value.removeLoadingMessage()
     }
+    
+    // Generate text without adding it to the chat history
+    fun generateTextDirectly(prompt: String, onResponse: (String) -> Unit) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                // Store the current UI state
+                val currentMessages = _uiState.value.messages.toList()
+                
+                // Send the message to the model
+                sendMessage(prompt)
+                
+                // Wait for the response to complete
+                while (currentInferenceJob != null && currentInferenceJob?.isActive == true) {
+                    kotlinx.coroutines.delay(100)
+                }
+                
+                // Get the last message (which should be the model's response)
+                val newMessages = _uiState.value.messages.toList()
+                if (newMessages.size > currentMessages.size) {
+                    // Extract the model's response
+                    val response = newMessages.last().message
+                    
+                    // Call the callback with the response
+                    onResponse(response)
+                    
+                    // Restore the original messages
+                    _uiState.value.clearMessages()
+                    currentMessages.forEach { message ->
+                        _uiState.value.addMessage(message.message, message.author)
+                    }
+                }
+            } catch (e: Exception) {
+                // In case of error, return a default response
+                onResponse("I'm sorry, I couldn't process that request.")
+            }
+        }
+    }
 
-    private fun setInputEnabled(isEnabled: Boolean) {
+    fun setInputEnabled(isEnabled: Boolean) {
         _textInputEnabled.value = isEnabled
     }
 

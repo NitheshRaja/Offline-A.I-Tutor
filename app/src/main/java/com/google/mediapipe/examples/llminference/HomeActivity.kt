@@ -63,21 +63,21 @@ private object Routes {
 class HomeActivity : ComponentActivity() {
     private lateinit var textFileStorage: TextFileStorage
     private lateinit var authStateListener: FirebaseAuth.AuthStateListener
-    
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
+
         // Apply the saved theme preference before setting content
         ThemePreferenceManager.applyTheme(ThemePreferenceManager.loadThemePreference(this))
-        
+
         // Initialize TextFileStorage
         textFileStorage = TextFileStorage(this)
-        
+
         // Set up the authentication state listener
         authStateListener = FirebaseAuth.AuthStateListener { auth ->
             val isLoggedIn = auth.currentUser != null
             Log.d("HomeActivity", "Auth state changed: user ${if (isLoggedIn) "logged in" else "logged out"}")
-            
+
             if (isLoggedIn) {
                 // User logged in - force a sync of Firebase data
                 textFileStorage.handleAuthStateChange(true)
@@ -89,16 +89,16 @@ class HomeActivity : ComponentActivity() {
                 return@AuthStateListener
             }
         }
-        
+
         // Check if user is logged in
         if (FirebaseAuth.getInstance().currentUser == null) {
             startAuthActivity()
             return
         }
-        
+
         // Force a Firebase sync when the activity starts
         textFileStorage.forceFirebaseSync()
-        
+
         setContent {
             // Use the ThemePreferenceManager to determine the current theme state
             val currentThemePreference = ThemePreferenceManager.loadThemePreference(LocalContext.current)
@@ -108,12 +108,12 @@ class HomeActivity : ComponentActivity() {
             LaunchedEffect(currentThemePreference) {
                 isDarkThemeState = ThemePreferenceManager.isCurrentlyDark(this@HomeActivity)
             }
-            
+
             val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
             val scope = rememberCoroutineScope()
             var showProfileDialog by remember { mutableStateOf(false) }
             val context = LocalContext.current
-            
+
             if (showProfileDialog) {
                 val currentUser = FirebaseAuth.getInstance().currentUser
                 Dialog(
@@ -124,7 +124,7 @@ class HomeActivity : ComponentActivity() {
                             .fillMaxWidth()
                             .padding(16.dp),
                         colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant 
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant
                         )
                     ) {
                         Column(
@@ -138,15 +138,15 @@ class HomeActivity : ComponentActivity() {
                                 Text(
                                     text = "Profile Details",
                                     style = MaterialTheme.typography.titleLarge,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant 
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
-                            
+
                             Divider(
                                 modifier = Modifier.padding(vertical = 8.dp),
-                                color = MaterialTheme.colorScheme.outline 
+                                color = MaterialTheme.colorScheme.outline
                             )
-                            
+
                             ProfileItemThemed(
                                 label = "Username",
                                 value = currentUser?.displayName ?: currentUser?.email?.substringBefore("@") ?: "Not available"
@@ -159,9 +159,9 @@ class HomeActivity : ComponentActivity() {
                                 label = "Account Type",
                                 value = if (currentUser?.isEmailVerified == true) "Verified User" else "Standard User"
                             )
-                            
+
                             Spacer(modifier = Modifier.height(16.dp))
-                            
+
                             Button(
                                 onClick = { showProfileDialog = false },
                                 modifier = Modifier.fillMaxWidth()
@@ -172,9 +172,9 @@ class HomeActivity : ComponentActivity() {
                     }
                 }
             }
-            
+
             LLMInferenceTheme(
-                darkTheme = isDarkThemeState 
+                darkTheme = isDarkThemeState
             ) {
                 ModalNavigationDrawer(
                     drawerState = drawerState,
@@ -201,11 +201,11 @@ class HomeActivity : ComponentActivity() {
                                         style = MaterialTheme.typography.titleLarge
                                     )
                                 }
-                                
+
                                 Divider(modifier = Modifier.padding(vertical = 16.dp))
-                                
+
                                 NavigationDrawerItem(
-                                    icon = { 
+                                    icon = {
                                         Icon(
                                             imageVector = if (isDarkThemeState) Icons.Outlined.LightMode else Icons.Outlined.DarkMode,
                                             contentDescription = "Toggle Theme"
@@ -213,13 +213,13 @@ class HomeActivity : ComponentActivity() {
                                     },
                                     label = { Text(if (isDarkThemeState) "Switch to Light Mode" else "Switch to Dark Mode") },
                                     selected = false,
-                                    onClick = { 
+                                    onClick = {
                                         val newTheme = if (isDarkThemeState) ThemePreferenceManager.THEME_LIGHT else ThemePreferenceManager.THEME_DARK
                                         ThemePreferenceManager.saveThemePreference(context, newTheme)
                                         isDarkThemeState = !isDarkThemeState
                                     }
                                 )
-                                
+
                                 val menuItems = listOf(
                                     NavigationDrawerItemData(
                                         icon = Icons.Default.List,
@@ -358,7 +358,7 @@ class HomeActivity : ComponentActivity() {
             }
         }
     }
-    
+
     override fun onStart() {
         super.onStart()
         // Add the auth state listener when activity starts
@@ -366,28 +366,28 @@ class HomeActivity : ComponentActivity() {
         // Apply theme in onStart as well in case preference changed while activity was stopped
         ThemePreferenceManager.applyTheme(ThemePreferenceManager.loadThemePreference(this))
     }
-    
+
     override fun onStop() {
         super.onStop()
         // Remove the auth state listener when activity stops
         FirebaseAuth.getInstance().removeAuthStateListener(authStateListener)
     }
-    
+
     private fun handleLogout() {
         // Notify TextFileStorage about logout before signing out
         textFileStorage.handleAuthStateChange(false)
-        
+
         // Sign out from Firebase
         FirebaseAuth.getInstance().signOut()
-        
+
         // Start auth activity
         startAuthActivity()
     }
-    
+
     private fun startAuthActivity() {
         val intent = Intent(this, AuthActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or 
-                      Intent.FLAG_ACTIVITY_CLEAR_TASK
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                Intent.FLAG_ACTIVITY_CLEAR_TASK
         (this as? Activity)?.startActivity(intent)
         (this as? Activity)?.overridePendingTransition(R.anim.scale_in, R.anim.scale_out)
         finish()
@@ -425,7 +425,7 @@ fun HomeScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { 
+                title = {
                     Text(
                         "Offline AI Tutor",
                         style = MaterialTheme.typography.headlineMedium
@@ -438,14 +438,14 @@ fun HomeScreen(
                             contentDescription = "Toggle Theme"
                         )
                     }
-                    
+
                     IconButton(onClick = { showModelInfo = !showModelInfo }) {
                         Icon(
                             imageVector = Icons.Filled.Info,
                             contentDescription = "Model Info"
                         )
                     }
-                    
+
                     IconButton(onClick = { navController.navigate(Routes.PROFILE) }) {
                         Icon(
                             imageVector = Icons.Filled.Person,
@@ -500,11 +500,21 @@ fun HomeScreen(
                 composable(Routes.ROLEPLAY_SELECTION) {
                     RoleplaySelectionScreen(
                         onRoleSelected = { role ->
-                            val intent = Intent(context, MainActivity::class.java)
-                            intent.putExtra("NAVIGATE_TO", "start_screen")
-                            intent.putExtra("SELECTED_ROLE", role)
-                            (context as? Activity)?.startActivity(intent)
-                            (context as? Activity)?.overridePendingTransition(R.anim.scale_in, R.anim.scale_out)
+                            if (role == "interviewer") {
+                                // For interviewer role, navigate directly to chat screen with interviewer mode
+                                val intent = Intent(context, MainActivity::class.java)
+                                intent.putExtra("NAVIGATE_TO", "chat_screen")
+                                intent.putExtra("SELECTED_ROLE", "INTERVIEWER")
+                                (context as? Activity)?.startActivity(intent)
+                                (context as? Activity)?.overridePendingTransition(R.anim.scale_in, R.anim.scale_out)
+                            } else {
+                                // For other roles, use the existing flow
+                                val intent = Intent(context, MainActivity::class.java)
+                                intent.putExtra("NAVIGATE_TO", "start_screen")
+                                intent.putExtra("SELECTED_ROLE", role)
+                                (context as? Activity)?.startActivity(intent)
+                                (context as? Activity)?.overridePendingTransition(R.anim.scale_in, R.anim.scale_out)
+                            }
                         }
                     )
                 }
@@ -571,7 +581,7 @@ fun ProfileScreen(
 ) {
     val context = LocalContext.current
     var userInfo by remember { mutableStateOf(SecureStorage.getUserInfo(context)) }
-    
+
     // Effect to update user info when the screen is composed
     LaunchedEffect(Unit) {
         userInfo = SecureStorage.getUserInfo(context)

@@ -23,7 +23,7 @@ class SpeechRecognitionService(private val context: Context) {
         )
         return activities.isNotEmpty()
     }
-
+    
     fun startListening(onResult: (String) -> Unit) {
         if (!isSpeechRecognitionAvailable()) {
             Toast.makeText(context, "Speech recognition not available on this device", Toast.LENGTH_LONG).show()

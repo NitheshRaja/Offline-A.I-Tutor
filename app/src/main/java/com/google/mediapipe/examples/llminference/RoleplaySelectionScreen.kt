@@ -31,7 +31,7 @@ internal fun RoleplaySelectionRoute(
         RoleplayScenario.CUSTOMER_CARE,
         RoleplayScenario.PROFESSIONAL_MEETING
     )
-    val scenarioTitles = listOf("Interviewer", "Customer Care", "Professional Meeting")
+    val scenarioTitles = listOf("Interviewer", "Customer Care", "Professional Meeting Assistant")
     val scenarioSubtitles = listOf(
         "Practice job interviews",
         "Handle customer queries",

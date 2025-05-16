@@ -178,20 +178,20 @@ fun DownloadIndicator(progress: Int, onCancel: () -> Unit) {
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.surface)
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
             modifier = Modifier.align(Alignment.Center)
-        ) {
-            Text(
-                text = "Downloading Model: $progress%",
+    ) {
+        Text(
+            text = "Downloading Model: $progress%",
                 style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
             CircularProgressIndicator(progress = { progress / 100f }, modifier = Modifier.size(48.dp))
             Spacer(modifier = Modifier.height(24.dp))
             Button(onClick = onCancel, modifier = Modifier) {
-                Text("Cancel")
+            Text("Cancel")
             }
         }
     }
@@ -204,13 +204,13 @@ fun LoadingIndicator() {
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.surface)
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
             modifier = Modifier.align(Alignment.Center)
-        ) {
-            Text(
-                text = stringResource(R.string.loading_model),
+    ) {
+        Text(
+            text = stringResource(R.string.loading_model),
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
@@ -218,7 +218,7 @@ fun LoadingIndicator() {
                 text = "Please wait while the model is being loaded...",
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(bottom = 24.dp)
-            )
+        )
             CircularProgressIndicator(modifier = Modifier.size(48.dp))
         }
     }
